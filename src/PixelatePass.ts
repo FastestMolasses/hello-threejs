@@ -1,37 +1,38 @@
-import * as THREE from "three"
-import { WebGLRenderer, WebGLRenderTarget } from "three"
-import { Pass, FullScreenQuad } from "three/examples/jsm/postprocessing/Pass"
+// THIS FILE JUST LOWERS THE RENDER RESOLUTION OF THE SCENE
+
+import * as THREE from 'three';
+import { WebGLRenderer, WebGLRenderTarget } from 'three';
+import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass';
 
 export default class PixelatePass extends Pass {
+    fsQuad: FullScreenQuad;
+    resolution: THREE.Vector2;
 
-    fsQuad: FullScreenQuad
-    resolution: THREE.Vector2
-
-    constructor( resolution: THREE.Vector2 ) {
-        super()
-        this.resolution = resolution
-        this.fsQuad = new FullScreenQuad( this.material() )
+    constructor(resolution: THREE.Vector2) {
+        super();
+        this.resolution = resolution;
+        this.fsQuad = new FullScreenQuad(this.material());
     }
 
     render(
         renderer: WebGLRenderer,
         writeBuffer: WebGLRenderTarget,
-        readBuffer: WebGLRenderTarget
+        readBuffer: WebGLRenderTarget,
     ) {
         // @ts-ignore
-        const uniforms = this.fsQuad.material.uniforms
-        uniforms.tDiffuse.value = readBuffer.texture
-        if ( this.renderToScreen ) {
-            renderer.setRenderTarget( null )
+        const uniforms = this.fsQuad.material.uniforms;
+        uniforms.tDiffuse.value = readBuffer.texture;
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
         } else {
-            renderer.setRenderTarget( writeBuffer )
-            if ( this.clear ) renderer.clear()
+            renderer.setRenderTarget(writeBuffer);
+            if (this.clear) renderer.clear();
         }
-        this.fsQuad.render( renderer )
+        this.fsQuad.render(renderer);
     }
 
     material() {
-        return new THREE.ShaderMaterial( {
+        return new THREE.ShaderMaterial({
             uniforms: {
                 tDiffuse: { value: null },
                 resolution: {
@@ -40,19 +41,17 @@ export default class PixelatePass extends Pass {
                         this.resolution.y,
                         1 / this.resolution.x,
                         1 / this.resolution.y,
-                    )
-                }
+                    ),
+                },
             },
-            vertexShader:
-                `
+            vertexShader: `
                 varying vec2 vUv;
                 void main() {
                     vUv = uv;
                     gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
                 }
                 `,
-            fragmentShader:
-                `
+            fragmentShader: `
                 uniform sampler2D tDiffuse;
                 uniform vec4 resolution;
                 varying vec2 vUv;
@@ -61,7 +60,7 @@ export default class PixelatePass extends Pass {
                     vec4 texel = texture2D( tDiffuse, iuv );
                     gl_FragColor = texel;
                 }
-                `
-        } )
+                `,
+        });
     }
 }
